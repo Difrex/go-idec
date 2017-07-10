@@ -34,8 +34,6 @@ func ParseMessage(message string) (Message, error) {
 	m.Subg = txtMessage[6]
 	m.Body = body
 
-	println(m.Tags)
-
 	return m, err
 }
 

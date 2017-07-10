@@ -2,6 +2,7 @@ package idec
 
 import (
 	"encoding/base64"
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -25,7 +26,10 @@ func ParseMessage(message string) (Message, error) {
 	if err != nil {
 		return m, err
 	}
-	m.Tags = txtMessage[0]
+
+	tags, err := ParseTags(txtMessage[0])
+
+	m.Tags = tags
 	m.Echo = txtMessage[1]
 	m.Timestamp = ts
 	m.From = txtMessage[3]
@@ -35,6 +39,25 @@ func ParseMessage(message string) (Message, error) {
 	m.Body = body
 
 	return m, err
+}
+
+// parseTags parse message tags and return Tags struct
+func ParseTags(tags string) (Tags, error) {
+	var t Tags
+
+	if !strings.Contains(tags, "ii/") {
+		e := errors.New("Bad tagstring")
+		return t, e
+	}
+
+	tagsSlice := strings.Split(tags, "/")
+	if len(tagsSlice) < 4 {
+		t.II = tagsSlice[1]
+		return t, nil
+	}
+	t.II = tagsSlice[1]
+	t.Repto = tagsSlice[3]
+	return t, nil
 }
 
 // ParseEchoList parse /list.txt

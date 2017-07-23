@@ -34,7 +34,7 @@ func main() {
 		panic(err.Error())
 	}
     
-	fmt.Println(message.Body)
+	fmt.Println(message.Subj)
 }
 EOF
 

@@ -41,6 +41,35 @@ func ParseMessage(message string) (Message, error) {
 	return m, err
 }
 
+// ParsePointMessage ...
+func ParsePointMessage(message string) (*PointMessage, error) {
+	var pointMessage *PointMessage
+	plainMessage, err := base64.StdEncoding.DecodeString(message)
+	if err != nil {
+		return pointMessage, err
+	}
+
+	txtMessage := strings.Split(string(plainMessage), "\n")
+	if len(txtMessage) < 6 {
+		e := errors.New("Bad message")
+		return pointMessage, e
+	}
+
+	var body string
+	for i := 5; i < len(txtMessage); i++ {
+		body = strings.Join([]string{body, txtMessage[i]}, "\n")
+	}
+
+	pointMessage.Echo = txtMessage[0]
+	pointMessage.To = txtMessage[1]
+	pointMessage.Subg = txtMessage[2]
+	pointMessage.EmptyLine = txtMessage[3]
+	pointMessage.Repto = txtMessage[4]
+	pointMessage.Body = body
+
+	return pointMessage, nil
+}
+
 // parseTags parse message tags and return Tags struct
 func ParseTags(tags string) (Tags, error) {
 	var t Tags

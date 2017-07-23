@@ -3,7 +3,9 @@ package idec
 import (
 	"encoding/base64"
 	"errors"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Message IDEC message structure
@@ -18,6 +20,16 @@ type Message struct {
 	Body      string `json:"body"`
 	Tags      Tags   `json:"tags"`
 	Repto     string `json:"repto"`
+}
+
+// PointMessage
+type PointMessage struct {
+	Echo      string `json:"echo"`
+	To        string `json:"to"`
+	Subg      string `json:"subg"`
+	EmptyLine string `json:"empty_line"`
+	Repto     string `json:"repto"`
+	Body      string `json:"body"`
 }
 
 // Tags IDEC message tags
@@ -41,15 +53,44 @@ func (t Tags) CollectTags() (string, error) {
 	return tagstring, nil
 }
 
-// PrepareMessageForSend Make base64 encoded message
-func PrepareMessageForSend(m Message) string {
+// Make bundle from point message
+func (p PointMessage) MakeBundleMessage(from, address string) (*Message, string, error) {
+	var result string
+	var message *Message
+
+	nodeTime := strconv.Itoa(int(time.Now().Unix()))
+	tags := Tags{"ii/ok", p.Repto}
+
+	message.Tags = tags
+	message.Echo = p.Echo
+	message.Timestamp = int(time.Now().Unix())
+	message.From = from
+	message.Address = address
+	message.To = p.To
+	message.Subg = p.Subg
+	message.Body = p.Body
+
+	strTags, err := tags.CollectTags()
+	if err != nil {
+		return message, "", err
+	}
+	rawMessage := strings.Join([]string{strTags, p.Echo,
+		nodeTime, from, address, p.To, p.Subg, p.EmptyLine, p.Body}, "\n")
+
+	result = base64.StdEncoding.EncodeToString([]byte(rawMessage))
+
+	return message, result, nil
+}
+
+// PrepareMessageForSend Make base64 encoded message. Client.
+func (p PointMessage) PrepareMessageForSend() string {
 	var result string
 
 	var rawMessage string
-	if m.Repto != "" {
-		rawMessage = strings.Join([]string{m.Echo, m.To, m.Subg, "", m.Repto, m.Body}, "\n")
+	if p.Repto != "" {
+		rawMessage = strings.Join([]string{p.Echo, p.To, p.Subg, p.EmptyLine, p.Repto, p.Body}, "\n")
 	}
-	rawMessage = strings.Join([]string{m.Echo, m.To, m.Subg, "", m.Body}, "\n")
+	rawMessage = strings.Join([]string{p.Echo, p.To, p.Subg, p.EmptyLine, p.Body}, "\n")
 
 	result = base64.StdEncoding.EncodeToString([]byte(rawMessage))
 

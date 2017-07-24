@@ -59,7 +59,7 @@ func (p PointMessage) MakeBundleMessage(from, address string) (*Message, string,
 	var message *Message
 
 	nodeTime := strconv.Itoa(int(time.Now().Unix()))
-	tags := Tags{"ii/ok", p.Repto}
+	tags := Tags{"ok", p.Repto}
 
 	message.Tags = tags
 	message.Echo = p.Echo
